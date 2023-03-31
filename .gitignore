@@ -1,0 +1,6 @@
+test
+__pycache__
+aalib
+data_readers/aa_reader.py
+data_readers/__pycache__
+matplotlibrc
