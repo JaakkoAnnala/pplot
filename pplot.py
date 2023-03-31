@@ -120,13 +120,11 @@ def get_data_txt(pp, fname):
                                    comments=pp.line_comment, delimiter=pp.data_separator) 
                 , labels )
 
-    footer = 0
-    # if there are no tag_data_ends len(ranges)==1 
-    if len(ranges)!=1:
-        # use wc for now
-        n_lines = subprocess.run(['wc', '-l',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        n_lines = int(n_lines.stdout.decode('utf-8').split(' ')[0])
-        footer = n_lines - ranges[0][1]
+
+    # use wc for now
+    n_lines = subprocess.run(['wc', '-l',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    n_lines = int(n_lines.stdout.decode('utf-8').split(' ')[0])
+    footer = 0 if ranges[0][1] == -1 else n_lines - ranges[0][1]
     
     dat = genfromtxt(fname, skip_header=ranges[0][0], skip_footer=footer, invalid_raise=False,
                             comments=pp.line_comment, delimiter=pp.data_separator)
