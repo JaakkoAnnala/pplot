@@ -13,27 +13,10 @@ import shlex
 import re
 import subprocess
 
-#from collections import OrderedDict
 from sympy.utilities.lambdify import lambdify
 from sympy.parsing.sympy_parser import parse_expr
 
-#import plt_style_use
-#import os
-#sys.path.insert( 0, os.getcwd() )
-import aalib.aa_wrap as aa
 from data_readers import *
-#
-# idea: Make it easy to add different methods for reading in data from different formats
-#       output of reading should just be optional labels and a numpy array of the data..
-#from os.path import dirname, basename, isfile, join
-#import glob
-#modules = glob.glob(os.path.join(os.path.dirname(__file__), "*.py"))
-#__all__ = [ os.path.basename(f)[:-3] for f in modules if os.path.isfile(f) and not f.endswith('__init__.py')]
-
-# Usage I want
-# pp -f[format?] fname1 [colums to plot] fname2 [colums to plot] ... more options
-# pp -f file1 file2 -expr " f1[0] * f2[1] "
-#                           f1[0] = file1 column 0 etc.
 
 def genfromtxt(*args, **kwargs):
     res = np.genfromtxt(*args, **kwargs)
