@@ -381,8 +381,8 @@ class pplot:
         if sys.stdin.isatty(): return
         self.piped = genfromtxt(sys.stdin, dtype=np.double, comments=self.line_comment)
         print(f"piped in data shape: {self.piped.shape}")
-        if self.args.cp:
-            self.piped_cols = self.args.cp
+        if self.args.p:
+            self.piped_cols = self.args.p
 
     def plot_one(self, file_i, col_i, expr_data=None, piped_data=False, label=None):
         #assert( (expr_data is not None) and (piped_data is not None), "plot_one should not get both expr_data and piped_data at the same time..")
