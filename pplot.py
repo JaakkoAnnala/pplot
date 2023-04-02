@@ -212,7 +212,9 @@ class pplot:
         p('-cmap',type=str           ,help="Set matplotlib.cm colormap for `-surf`. https://matplotlib.org/stable/gallery/color/colormap_reference.html")
         
         p('-title',type=str          ,help="Set the figure title to given string. Supports LaTeX, note that dollar sign must be escaped '\$'.")
-        p('-ps'  ,type=str           ,help="Set the matplotlib plot format style string e.g. 'o-'. Note '-' has to be last if present.")
+        p('-xlab'  ,type=str          ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
+        p('-ylab'  ,type=str          ,help="Set the y label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
+        p('-ps'   ,type=str          ,help="Set the matplotlib plot format style string e.g. 'o-'. Note '-' has to be last if present.")
 #TODO        p('-db'  ,type=int           ,help="Begin at given row.")
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
         
@@ -417,6 +419,9 @@ class pplot:
         if self.args.lny:
             self.ax.set_yscale('log',base=np.e)
             self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x)}"))
+        if self.args.xlab is not None: self.ax.set_xlabel(self.args.xlab)
+        if self.args.ylab is not None: self.ax.set_ylabel(self.args.ylab)
+
         
         # plot histogram
         if self.args.hist:
@@ -492,7 +497,7 @@ class pplot:
             self.ax = self.axs
 
         # set figure subtitle
-        if self.args.title: self.fig.suptitle(self.args.t, usetex=True, fontsize=16)
+        if self.args.title: self.fig.suptitle(self.args.title, usetex=True, fontsize=16)
 
         # if plotting surface just make all cols arrays = [0] 
         # so we plot one surface from each file only once and at least once
