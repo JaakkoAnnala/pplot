@@ -17,7 +17,8 @@ One file can be piped in through stdin (use `-p` to select which columns to plot
 $ cat data.txt | pplot.py -p 1 2 3
 ```
 
-For help:
+Possible to plot error bars `-e`, histograms `-hist`, 3d surfaces `-surf`, subplots `-subf`, etc..
+See help for all possible commands:
 ```console
 $pplot.py -h
 ```
@@ -52,6 +53,7 @@ $pplot.py data.txt 1 -x0 -rf data_reader_example
 #### GNU utils:
 - `grep`
 - `wc`
+- `sed`
 
 Should be installed and in your $PATH.
 For now, used in default data reader for finding `tag_data_start` `tag_data_end` and `tag_header` tags.
