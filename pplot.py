@@ -212,12 +212,14 @@ class pplot:
         p('-cmap',type=str           ,help="Set matplotlib.cm colormap for `-surf`. https://matplotlib.org/stable/gallery/color/colormap_reference.html")
         
         p('-title',type=str          ,help="Set the figure title to given string. Supports LaTeX, note that dollar sign must be escaped '\$'.")
-        p('-xlab'  ,type=str          ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
-        p('-ylab'  ,type=str          ,help="Set the y label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
+        p('-xlab'  ,type=str         ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
+        p('-ylab'  ,type=str         ,help="Set the y label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
         p('-ps'   ,type=str          ,help="Set the matplotlib plot format style string e.g. 'o-'. Note '-' has to be last if present.")
 #TODO        p('-db'  ,type=int           ,help="Begin at given row.")
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
-        
+        p("-ts",type=str             ,help="Tag Start : Option for default data reader.")
+        p("-te",type=str             ,help="Tag End   : Option for default data reader.")
+
 
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
@@ -240,6 +242,9 @@ class pplot:
             self._data_reader_f_ = reader_f
 
         if self.args.s is not None: self.data_separator = self.args.s
+        if self.args.ts is not None: self.tag_data_start= self.args.ts
+        if self.args.te is not None: self.tag_data_end  = self.args.te
+
         self.subplt_x=0
         self.subplt_y=0
 
