@@ -420,10 +420,10 @@ class pplot:
         if self.args.logy: self.ax.set_yscale('log')
         if self.args.lnx:
             self.ax.set_xscale('log',base=np.e)
-            self.ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x)}"))
+            self.ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
         if self.args.lny:
             self.ax.set_yscale('log',base=np.e)
-            self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x)}"))
+            self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
         if self.args.xlab is not None: self.ax.set_xlabel(self.args.xlab)
         if self.args.ylab is not None: self.ax.set_ylabel(self.args.ylab)
 
