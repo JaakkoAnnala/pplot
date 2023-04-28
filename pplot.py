@@ -146,13 +146,13 @@ class pplot:
     # defaults
     _data_reader_f_=get_data_txt   # default data reader func
     plt_fmt        = '-'           # matplotlib plot format
+    cmap           = cm.viridis    #
     # defaults for get_data_txt
     tag_data_start = "#data_start" # if set to None should disable searching for the data and just read everything in the file
     tag_data_end   = "#data_end"   # 
     tag_header     = "#header"     # if set to None does not try to get header as a default, the option -head can still be used
     line_comment   = "#"           # line comment when reading data
     data_separator = None          # None defaults to any number of white space
-
     # Internals:
     parser = None
     args = None
@@ -210,6 +210,8 @@ class pplot:
         p('-surf',type=str,nargs='?' ,const='grid_data' #TODO: flattened array
                                      ,help="Surface: plots surface from file assuming the file contains an X-Y grid of Z-values.")
         p('-cmap',type=str           ,help="Set matplotlib.cm colormap for `-surf`. https://matplotlib.org/stable/gallery/color/colormap_reference.html")
+        p('-logc',action='store_true',help="Log color bar axis for scatter plot.")
+        p("-sc",type=int,nargs="+"   ,help="Scatter plot with given x-col y-col and optional color-col to color the points.")
         
         p('-title',type=str          ,help="Set the figure title to given string. Supports LaTeX, note that dollar sign must be escaped '\$'.")
         p('-xlab'  ,type=str         ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
@@ -219,7 +221,6 @@ class pplot:
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
         p("-ts",type=str             ,help="Tag Start : Option for default data reader. Default: `#data_start`")
         p("-te",type=str             ,help="Tag End   : Option for default data reader. Default: `#data_end`")
-
 
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
@@ -244,6 +245,11 @@ class pplot:
         if self.args.s is not None: self.data_separator = self.args.s
         if self.args.ts is not None: self.tag_data_start= self.args.ts
         if self.args.te is not None: self.tag_data_end  = self.args.te
+        if self.args.cmap is not None: self.cmap = getattr(cm, self.args.cmap)
+
+        if self.args.sc and len(self.args.sc) < 2:
+            print("ERROR: -sc expect atleast two integers the x-col and y-col")
+            exit(1)
 
         self.subplt_x=0
         self.subplt_y=0
@@ -385,11 +391,31 @@ class pplot:
             x = np.arange(0,shape[1])
             y = np.arange(0,shape[0])
             x,y = np.meshgrid(x,y)
-            cmap = cm.viridis if not self.args.cmap else getattr(cm, self.args.cmap)
-            tmp = self.ax.plot_surface(x,y,dat, cmap=cmap, label=label)
+            tmp = self.ax.plot_surface(x,y,dat, cmap=self.cmap, label=label)
             # https://github.com/matplotlib/matplotlib/issues/4067 ... annoying
             tmp._edgecolors2d = tmp._edgecolor3d
             tmp._facecolors2d = tmp._facecolor3d
+            return
+
+        # axes settings
+        if self.args.logx: self.ax.set_xscale('log')
+        if self.args.logy: self.ax.set_yscale('log')
+        if self.args.lnx:
+            self.ax.set_xscale('log',base=np.e)
+            self.ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
+        if self.args.lny:
+            self.ax.set_yscale('log',base=np.e)
+            self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
+        if self.args.xlab is not None: self.ax.set_xlabel(self.args.xlab)
+        if self.args.ylab is not None: self.ax.set_ylabel(self.args.ylab)
+
+        if self.args.sc is not None:
+            clr = None if len(self.args.sc)<3 else self.data[file_i][:,self.args.sc[2]]
+            x = self.data[file_i][:,self.args.sc[0]] if not piped_data else self.piped[:,self.args.sc[0]]
+            y = self.data[file_i][:,self.args.sc[1]] if not piped_data else self.piped[:,self.args.sc[1]]
+            norm = None if self.args.logc is None else matplotlib.colors.LogNorm(vmin=np.min(clr), vmax=np.max(clr) )
+            sc=self.ax.scatter(x,y,c=clr,cmap=self.cmap, norm=norm, label=label)
+            if len(self.args.sc)>2: plt.colorbar(sc)
             return
 
         # x-axis
@@ -413,20 +439,6 @@ class pplot:
             weights = self.data[file_i][:,self.args.we] if not piped_data else self.piped[:,slef.args.we]
             w0 = weights[0]
             weights = np.exp(-weights+w0)
-
-
-        # axes settings
-        if self.args.logx: self.ax.set_xscale('log')
-        if self.args.logy: self.ax.set_yscale('log')
-        if self.args.lnx:
-            self.ax.set_xscale('log',base=np.e)
-            self.ax.xaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
-        if self.args.lny:
-            self.ax.set_yscale('log',base=np.e)
-            self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
-        if self.args.xlab is not None: self.ax.set_xlabel(self.args.xlab)
-        if self.args.ylab is not None: self.ax.set_ylabel(self.args.ylab)
-
         
         # plot histogram
         if self.args.hist:
@@ -506,7 +518,8 @@ class pplot:
 
         # if plotting surface just make all cols arrays = [0] 
         # so we plot one surface from each file only once and at least once
-        if self.args.surf:
+        # same thing for scatter
+        if self.args.surf or self.args.sc:
             if len(self.piped) > 0: self.piped_cols = [0]
             self.data_cols = [ [0] for i in self.fname_data]
             if self.args.c is not None: self.args.c = [0]
