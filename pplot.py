@@ -217,8 +217,8 @@ class pplot:
         p('-ps'   ,type=str          ,help="Set the matplotlib plot format style string e.g. 'o-'. Note '-' has to be last if present.")
 #TODO        p('-db'  ,type=int           ,help="Begin at given row.")
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
-        p("-ts",type=str             ,help="Tag Start : Option for default data reader.")
-        p("-te",type=str             ,help="Tag End   : Option for default data reader.")
+        p("-ts",type=str             ,help="Tag Start : Option for default data reader. Default: `#data_start`")
+        p("-te",type=str             ,help="Tag End   : Option for default data reader. Default: `#data_end`")
 
 
         p=None
