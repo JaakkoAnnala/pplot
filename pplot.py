@@ -127,7 +127,7 @@ def get_data_labels(pp, fname):
             row = int(pp.args.head)
             header = subprocess.run(['sed', '-n', f'{row}p',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
             header = header.stdout.decode('utf-8')
-            header = header.strip().split(' ')
+            header = " ".join(header.split()).split(" ") # get rid of extra white space
             if header == ['']:
                 header = []
                 print(f"WARNING: the given line for -head was empty: {fname}:{row}",file=sys.stderr)
@@ -136,7 +136,7 @@ def get_data_labels(pp, fname):
             tag_h = pp.args.head
     header = subprocess.run(['sed', '-n', '-e', f's/^.*{tag_h}\s*//p',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     header = header.stdout.decode('utf-8')
-    header = header.strip().split(' ')
+    header = " ".join(header.split()).split(" ") # get rid of extra white space
     if header == ['']:
         header = []
         print(f"WARNING: did not find header tag `{tag_h}` in file: {fname}")
