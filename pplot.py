@@ -356,11 +356,13 @@ class pplot:
                 if len(idxs) != 2: continue # TODO: can there be some name collision here. something of form f(.*)_(.*) not intended to be data name f[int]_[int]...
                 fi = int(idxs[0])
                 di = int(idxs[1])
-                arg_arr.append( self.data[fi][:,di] )
+                dat = self.data[fi][:,di] if self.data[fi].shape[0] > 1 else self.data[fi][0]
+                arg_arr.append( dat )
             elif sym_str[0] == 'p':
                 try:
                     di = int(sym_str[1:])
-                    arg_arr.append( self.piped[:,di] )
+                    dat = self.piped[:,di] if self.piped.shape[0] > 1 else self.piped[0]
+                    arg_arr.append( dat )
                 except:
                     pass
 
