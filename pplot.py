@@ -425,8 +425,10 @@ class pplot:
         # y-axis
         y = None
         if expr_data is not None: y = expr_data
-        elif piped_data: y = self.piped[:,col_i]
-        else: y = self.data[file_i][:,col_i]
+        elif piped_data:
+            y = self.piped[:,col_i] if self.piped.shape[0] > 1 else self.piped[0]
+        else:
+            y = self.data[file_i][:,col_i] if self.data[file_i].shape[0] > 1 else self.data[file_i][0]
 
         # set error bar column
         err = None 
