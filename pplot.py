@@ -194,6 +194,8 @@ class pplot:
         p('-logx',action='store_true',help="Log x axis.")
         p('-lny' ,action='store_true',help="Base e Log y axis.")
         p('-lnx' ,action='store_true',help="Base e Log x axis.")
+        p('-xlim',type=float,nargs=2, help="Set the x range of the plots.")
+        p('-ylim',type=float,nargs=2, help="Set the y range of the plots.")
         p("-hist",type=int,nargs='?' ,const=-1
                                      ,help="Plot data as a histogram. Optionally give number of bins. Default use sqrt(data_length) bins.")
         p("-norm",action="store_true",help="Normalize histogram such that the integral equals 1.")
@@ -221,7 +223,7 @@ class pplot:
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
         p("-ts",type=str             ,help="Tag Start : Option for default data reader. Default: `#data_start`")
         p("-te",type=str             ,help="Tag End   : Option for default data reader. Default: `#data_end`")
-
+        p("-axvl",type=int           ,help="print vertical lines on multiples of given int")
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
@@ -410,6 +412,9 @@ class pplot:
             self.ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x,pos: f"{np.log(x):.1f}"))
         if self.args.xlab is not None: self.ax.set_xlabel(self.args.xlab)
         if self.args.ylab is not None: self.ax.set_ylabel(self.args.ylab)
+        if self.args.xlim is not None: self.ax.set_xlim(self.args.xlim[0],self.args.xlim[1])
+        if self.args.ylim is not None: self.ax.set_ylim(self.args.ylim[0],self.args.ylim[1])
+
 
         if self.args.sc is not None:
             clr = None if len(self.args.sc)<3 else self.data[file_i][:,self.args.sc[2]]
@@ -464,6 +469,16 @@ class pplot:
             if x is not None: self.ax.plot(x, y,fmt,label=label)
             else: self.ax.plot(y,fmt,label=label)
         
+        # do after plotting:
+        # plot vertical lines:
+        if self.args.axvl is not None:
+            # for now plot vertical lines from 0 -> onwards
+            xlims = self.ax.get_xlim()
+            start = self.args.axvl
+            while start < xlims[1]:
+                self.ax.axvline(start, zorder=-999, linestyle=":", color="gray")
+                start += self.args.axvl
+
     def set_axis_to_plot(self):
         #if self.ax: self.ax.legend()
         # figure out sub plot stuff
