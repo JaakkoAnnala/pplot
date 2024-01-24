@@ -224,6 +224,7 @@ class pplot:
         p("-ts",type=str             ,help="Tag Start : Option for default data reader. Default: `#data_start`")
         p("-te",type=str             ,help="Tag End   : Option for default data reader. Default: `#data_end`")
         p("-axvl",type=int           ,help="print vertical lines on multiples of given int")
+        p("-axhl",type=int           ,help="print horizontal lines on multiples of given int")
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
@@ -475,9 +476,25 @@ class pplot:
             # for now plot vertical lines from 0 -> onwards
             xlims = self.ax.get_xlim()
             start = self.args.axvl
-            while start < xlims[1]:
+            while start <= xlims[1]:
                 self.ax.axvline(start, zorder=-999, linestyle=":", color="gray")
                 start += self.args.axvl
+            start = 0
+            while start >= xlims[0]:
+                self.ax.axvline(start, zorder=-999, linestyle=":", color="gray")
+                start -= self.args.axvl
+        # plot horizontal lines:
+        if self.args.axhl is not None:
+            ylims = self.ax.get_ylim()
+            start = self.args.axhl
+            while start <= ylims[1]:
+                self.ax.axhline(start, zorder=-999, linestyle=":", color="gray")
+                start += self.args.axhl
+            start = 0
+            while start >= ylims[0]:
+                self.ax.axhline(start, zorder=-999, linestyle=":", color="gray")
+                start -= self.args.axhl
+
 
     def set_axis_to_plot(self):
         #if self.ax: self.ax.legend()
