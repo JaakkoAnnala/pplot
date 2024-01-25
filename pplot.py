@@ -190,6 +190,7 @@ class pplot:
         p('-s'   ,type=str           ,help='Separator   : Option for default data reader. Default is any number of whitespaces.')
         p('-head',type=str,nargs='?' ,const=self.tag_header
                                      ,help=f"Header      : Option for default data reader. If no argument given try to get header from first line that contains `{self.tag_header}`. If given input is convertible to integer read the header from that line. Otherwise find the line with the given string and use the preceding string to get the labels.")
+        p('-cr'  ,type=int,nargs='+' ,help="Column Range. Only read data from given range of columns from all datafiles. If only one int given assume range [0,int]")
         p('-logy',action='store_true',help="Log y axis.")
         p('-logx',action='store_true',help="Log x axis.")
         p('-lny' ,action='store_true',help="Base e Log y axis.")
@@ -296,7 +297,15 @@ class pplot:
             self.current_fi = i #useful in some data readers
             if self.args.rf: dh = self._data_reader_f_(self,  f )
             else: dh = self._data_reader_f_( f ) #python is weird
-            self.data.append(dh[0])
+            
+            # do here Column Range:
+            # not optimal, we still read all the data unnecesarily, but this is the simplest way
+            if self.args.cr is not None:
+                cr = self.args.cr
+                if len(cr)>=2: self.data.append(dh[0][cr[0]:cr[1]])
+                else: self.data.append(dh[0][0:cr[0]])
+            else: self.data.append(dh[0])
+            
             self.data_labels.append(dh[1])
 
 
