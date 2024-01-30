@@ -224,8 +224,9 @@ class pplot:
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
         p("-ts",type=str             ,help="Tag Start : Option for default data reader. Default: `#data_start`")
         p("-te",type=str             ,help="Tag End   : Option for default data reader. Default: `#data_end`")
-        p("-axvl",type=int           ,help="print vertical lines on multiples of given int")
-        p("-axhl",type=int           ,help="print horizontal lines on multiples of given int")
+        p("-axvl",type=int           ,help="plot vertical lines on multiples of given int")
+        p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
+        p("-mean",action='store_true',help="print means of the columns")
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
@@ -390,6 +391,11 @@ class pplot:
     def get_piped(self):
         if sys.stdin.isatty(): return
         self.piped = genfromtxt(sys.stdin, dtype=np.double, comments=self.line_comment)
+        # -cr
+        if self.args.cr is not None:
+            cr = self.args.cr
+            if len(cr)>=2: self.piped = self.piped[cr[0]:cr[1]]
+            else: self.piped = self.piped[0:cr[0]]
         print(f"piped in data shape: {self.piped.shape}")
         if self.args.p:
             self.piped_cols = self.args.p
@@ -479,6 +485,9 @@ class pplot:
             if x is not None: self.ax.plot(x, y,fmt,label=label)
             else: self.ax.plot(y,fmt,label=label)
         
+        # calc means
+        if self.args.mean:
+            print(f"{label} mean = {np.mean(y)}")
         # do after plotting:
         # plot vertical lines:
         if self.args.axvl is not None:
