@@ -468,12 +468,16 @@ class pplot:
         # plot histogram
         if self.args.hist:
             self.plot_hist(y, label=label, weights=weights)
+            if self.args.mean:
+                print(f"{label} mean = {np.mean(y)}")
             return
         
         # plot binned data
         if self.args.b and self.args.b > 0:
             if not x: x = np.arange(0,len(y))
             self.plot_binned_stdev(self.args.b, x, y, label=label)
+            if self.args.mean:
+                print(f"{label} mean = {np.mean(y)}")
             return
         
         # plot normal
