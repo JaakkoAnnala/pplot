@@ -474,7 +474,7 @@ class pplot:
         
         # plot binned data
         if self.args.b and self.args.b > 0:
-            if not x: x = np.arange(0,len(y))
+            if x is not None: x = np.arange(0,len(y))
             self.plot_binned_stdev(self.args.b, x, y, label=label)
             if self.args.mean:
                 print(f"{label} mean = {np.mean(y)}")
