@@ -469,7 +469,7 @@ class pplot:
         if self.args.hist:
             self.plot_hist(y, label=label, weights=weights)
             if self.args.mean:
-                print(f"{label} mean = {np.mean(y)}")
+                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
             return
         
         # plot binned data
@@ -477,7 +477,7 @@ class pplot:
             if x is not None: x = np.arange(0,len(y))
             self.plot_binned_stdev(self.args.b, x, y, label=label)
             if self.args.mean:
-                print(f"{label} mean = {np.mean(y)}")
+                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
             return
         
         # plot normal
@@ -491,7 +491,7 @@ class pplot:
         
         # calc means
         if self.args.mean:
-            print(f"{label} mean = {np.mean(y)}")
+            print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
         # do after plotting:
         # plot vertical lines:
         if self.args.axvl is not None:
