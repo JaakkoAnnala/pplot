@@ -99,7 +99,7 @@ def get_data_txt(pp, fname):
     ranges = txt_find_data(pp, fname)
     #print(ranges)
     if not ranges:
-        return ( genfromtxt(fname, skip_header=0, invalid_raise=False, 
+        return ( genfromtxt(fname, skip_header=pp.skip_lines, invalid_raise=False, 
                                    comments=pp.line_comment, delimiter=pp.data_separator) 
                 , labels )
 
@@ -171,6 +171,7 @@ class pplot:
     weights=None
     labels=None
     current_fi=0 # current file index being read
+    skip_lines=0 # default txt parser lines to skip from the beginning of the file
 
     data       = [] # contains all the data read from any type of files in order they appear in the command line arguments
     fname_data = [] # filenames corresponding to the data above, in same order
@@ -227,11 +228,13 @@ class pplot:
         p("-axvl",type=int           ,help="plot vertical lines on multiples of given int")
         p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
         p("-mean",action='store_true',help="print means of the columns")
+        p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
         #print(f"args: {self.args}")
-        
+        if self.args.skip_lines:
+            self.skip_lines = 0 if self.args.skip_lines < 0 else self.args.skip_lines
 
         # set up the data reader func
         if self.args.rf:
@@ -331,7 +334,7 @@ class pplot:
 
     def plot_hist(self, *data,label=None, weights=None):
         #print(weights)
-        c = next(plt.gca()._get_lines.prop_cycler)['color'] # get the color cyclers next color
+        c = plt.gca()._get_lines.get_next_color()
         c = matplotlib.colors.to_rgb(c)
         h = self.args.hist
         bins = h if (h and h>0) else int(np.sqrt(len(data[0])))
