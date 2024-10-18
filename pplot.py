@@ -334,7 +334,7 @@ class pplot:
 
     def plot_hist(self, *data,label=None, weights=None):
         #print(weights)
-        c = plt.gca()._get_lines.get_next_color()
+        c = plt.gca()._get_lines.get_next_color() # get next line color
         c = matplotlib.colors.to_rgb(c)
         h = self.args.hist
         bins = h if (h and h>0) else int(np.sqrt(len(data[0])))
