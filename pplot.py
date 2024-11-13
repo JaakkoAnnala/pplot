@@ -136,6 +136,7 @@ def get_data_labels(pp, fname):
             tag_h = pp.args.head
     header = subprocess.run(['sed', '-n', '-e', f's/^.*{tag_h}\s*//p',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     header = header.stdout.decode('utf-8')
+    header = header.split('\n')[0] # if multiple lines found with tag_h, take the first one
     header = " ".join(header.split()).split(" ") # get rid of extra white space
     if header == ['']:
         header = []
