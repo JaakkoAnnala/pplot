@@ -134,7 +134,7 @@ def get_data_labels(pp, fname):
             return header
         except:
             tag_h = pp.args.head
-    header = subprocess.run(['sed', '-n', '-e', f's/^.*{tag_h}\s*//p',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    header = subprocess.run(['sed', '-n', '-e', f's/^.*{tag_h}\\s*//p',fname], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
     header = header.stdout.decode('utf-8')
     header = header.split('\n')[0] # if multiple lines found with tag_h, take the first one
     header = " ".join(header.split()).split(" ") # get rid of extra white space
@@ -218,9 +218,9 @@ class pplot:
         p('-logc',action='store_true',help="Log color bar axis for scatter plot.")
         p("-sc",type=int,nargs="+"   ,help="Scatter plot with given x-col y-col and optional color-col to color the points.")
         
-        p('-title',type=str          ,help="Set the figure title to given string. Supports LaTeX, note that dollar sign must be escaped '\$'.")
-        p('-xlab'  ,type=str         ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
-        p('-ylab'  ,type=str         ,help="Set the y label. Supports LaTeX, note that dollar sign must be escaped '\$'.")
+        p('-title',type=str          ,help="Set the figure title to given string. Supports LaTeX, note that dollar sign must be escaped '\\$'.")
+        p('-xlab'  ,type=str         ,help="Set the x label. Supports LaTeX, note that dollar sign must be escaped '\\$'.")
+        p('-ylab'  ,type=str         ,help="Set the y label. Supports LaTeX, note that dollar sign must be escaped '\\$'.")
         p('-ps'   ,type=str          ,help="Set the matplotlib plot format style string e.g. 'o-'. Note '-' has to be last if present.")
 #TODO        p('-db'  ,type=int           ,help="Begin at given row.")
 #TODO        p('-de'  ,type=int           ,help="End at given row.")
