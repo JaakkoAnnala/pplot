@@ -342,7 +342,7 @@ class pplot:
         if self.args.fold:
             self.last_plot=self.ax.hist(data[0]%1.0,label=label, bins=bins,
                               color=c, histtype='stepfilled',
-                              edgecolor=(*c,1), facecolor=(*c,0.5),
+                              edgecolor=[(*c,1)], facecolor=[(*c,0.5)],
                               weights=weights, density=self.args.norm)
             lp = self.last_plot
             if self.args.int:
@@ -359,7 +359,7 @@ class pplot:
         else:
             self.last_plot=self.ax.hist(data[0],label=label, bins=bins,
                               color=c, histtype='stepfilled',
-                              edgecolor=(*c,1), facecolor=(*c,0.5),
+                              edgecolor=[(*c,1)], facecolor=[(*c,0.5)],
                               weights=weights, density=self.args.norm)
 
     def plot_expr(self,expr):
