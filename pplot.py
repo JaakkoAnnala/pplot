@@ -18,6 +18,17 @@ from sympy.parsing.sympy_parser import parse_expr
 
 from data_readers import *
 
+from expr_funcs import expr_funcs_dict
+
+import inspect
+def format_func_signature(func):
+    sig = inspect.signature(func)
+    # get source path and line number
+    path = inspect.getsourcefile(func)
+    path = os.path.abspath(path) if path else "ERROR: did not find where the function was defined."
+    _, line = inspect.getsourcelines(func)
+    return (f"{func.__name__}{sig}", f"{path}:{line}")
+
 def genfromtxt(*args, **kwargs):
     res = np.genfromtxt(*args, **kwargs)
     # annoying hack to get same shape for the read in array even with only 1 row.
@@ -230,6 +241,7 @@ class pplot:
         p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
         p("-mean",action='store_true',help="print means of the columns")
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
+        p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p=None
         if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
@@ -250,6 +262,12 @@ class pplot:
                 print(f"ERROR: cound not find method {self.args.rf}() in module {self.args.rf}. The file name and method name of data reader implementation should match. Check help for `-rf` command.",file=sys.stderr)
                 exit(1)
             self._data_reader_f_ = reader_f
+
+        if self.args.list_expr_funcs:
+            print("Additional functions available in -expr:")
+            for func in expr_funcs_dict.values():
+                func_sig, func_loc = format_func_signature(func)
+                print(f"  {func_sig:<50} from: {func_loc:<64}")
 
         if self.args.s is not None: self.data_separator = self.args.s
         if self.args.ts is not None: self.tag_data_start= self.args.ts
@@ -384,7 +402,7 @@ class pplot:
                     pass
 
         #idxs_x = [ int(str(f_syms[i])[1]) for i in range(0,len(f_syms)) ]
-        np_f = lambdify(f_syms, f, 'numpy')
+        np_f = lambdify(f_syms, f, modules=[expr_funcs_dict,'numpy'] )
         expr_data = np_f( *arg_arr )#*[data[:,i] for i in idxs]  )
         #if self.args.x is not None:
         self.plot_one(0,0 ,expr_data=expr_data, label=expr)
