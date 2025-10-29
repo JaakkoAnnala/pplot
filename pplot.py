@@ -1,27 +1,33 @@
 #!/usr/bin/env python3
 import sys
-import os
+#import os
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import matplotlib.colors
 from matplotlib import cm
-import matplotlib.ticker as mtick
+#import matplotlib.ticker as mtick
 import argparse
-import glob
-import shlex
+#import glob
+#import shlex
 
-import re
+#import re
 import subprocess
 
-from sympy.utilities.lambdify import lambdify
-from sympy.parsing.sympy_parser import parse_expr
+#from sympy.utilities.lambdify import lambdify
+#from sympy.parsing.sympy_parser import parse_expr
 
 from data_readers import *
 
 from expr_funcs import expr_funcs_dict
 
+try:
+    import mcerr
+except:
+    mcerr = None
+
 import inspect
 def format_func_signature(func):
+    import os
     sig = inspect.signature(func)
     # get source path and line number
     path = inspect.getsourcefile(func)
@@ -240,10 +246,13 @@ class pplot:
         p("-axvl",type=int           ,help="plot vertical lines on multiples of given int")
         p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
         p("-mean",action='store_true',help="print means of the columns")
+#TODO        p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p=None
-        if arg_str is not None: self.args = self.parser.parse_args(shlex.split(arg_str))
+        if arg_str is not None:
+            import shlex
+            self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
         #print(f"args: {self.args}")
         if self.args.skip_lines:
@@ -292,6 +301,7 @@ class pplot:
         self.plot_all()
 
         if arg_str is None:
+            import matplotlib.pyplot as plt
             plt.legend()
             plt.show()
 
@@ -352,6 +362,8 @@ class pplot:
             self.ax.plot((edges[1:] + edges[:-1])/2, mean,   label=label)
 
     def plot_hist(self, *data,label=None, weights=None):
+        import matplotlib.pyplot as plt
+
         #print(weights)
         c = plt.gca()._get_lines.get_next_color() # get next line color
         c = matplotlib.colors.to_rgb(c)
@@ -381,6 +393,9 @@ class pplot:
                               weights=weights, density=self.args.norm)
 
     def plot_expr(self,expr):
+        from sympy.utilities.lambdify import lambdify
+        from sympy.parsing.sympy_parser import parse_expr
+
         f = parse_expr(expr)
         f_syms = list(f.free_symbols)
         arg_arr = []
@@ -423,6 +438,9 @@ class pplot:
             self.piped_cols = self.args.p
 
     def plot_one(self, file_i, col_i, expr_data=None, piped_data=False, label=None):
+        import matplotlib.pyplot as plt
+        import matplotlib.ticker as mtick
+        
         #assert( (expr_data is not None) and (piped_data is not None), "plot_one should not get both expr_data and piped_data at the same time..")
         if self.args.subc: self.set_axis_to_plot()
 
@@ -483,23 +501,35 @@ class pplot:
         weights = None
         if self.args.we is not None and self.args.hist: # dont bother if not hist plot
             #print(f"computing we using: {self.args.we}")
-            weights = self.data[file_i][:,self.args.we] if not piped_data else self.piped[:,slef.args.we]
+            weights = self.data[file_i][:,self.args.we] if not piped_data else self.piped[:,self.args.we]
             w0 = weights[0]
             weights = np.exp(-weights+w0)
-        
+
+
+        # calc means err etc...
+        if self.args.mean:
+            print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}", end="")
+        if self.args.err:
+            if mcerr:
+                mcerr_res = mcerr.mc_avg_err(y)
+                print(f" err = {mcerr_res[1]} integrated_auto_corr = {mcerr_res[2]} ( +/- {mcerr_res[3]} )", end="")
+            else:
+                print(" mcerr not found",end="")
+        print("")
+
         # plot histogram
         if self.args.hist:
             self.plot_hist(y, label=label, weights=weights)
-            if self.args.mean:
-                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
+#            if self.args.mean:
+#                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
             return
         
         # plot binned data
         if self.args.b and self.args.b > 0:
             if x is not None: x = np.arange(0,len(y))
             self.plot_binned_stdev(self.args.b, x, y, label=label)
-            if self.args.mean:
-                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
+#            if self.args.mean:
+#                print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
             return
         
         # plot normal
@@ -511,9 +541,6 @@ class pplot:
             if x is not None: self.ax.plot(x, y,fmt,label=label)
             else: self.ax.plot(y,fmt,label=label)
         
-        # calc means
-        if self.args.mean:
-            print(f"{label} mean = {np.mean(y)}  stddev/sqrt(N) = {np.std(y)/np.sqrt(len(y))}")
         # do after plotting:
         # plot vertical lines:
         if self.args.axvl is not None:
@@ -572,6 +599,7 @@ class pplot:
         return nsub + n_piped + n_expr
 
     def plot_all(self):
+        import matplotlib.pyplot as plt
 
         # set up sub plot stuff
         sp_kw = {}
