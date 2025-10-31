@@ -220,7 +220,7 @@ class pplot:
                                      ,help="Plot data as a histogram. Optionally give number of bins. Default use sqrt(data_length) bins.")
         p("-norm",action="store_true",help="Normalize histogram such that the integral equals 1.")
         p("-fold",action="store_true",help="Fold histogram to range [0,1].")
-        p("-we"  ,type=int           ,help="Weight the histogram with the given data idx giving weights exp(-x[i]+x[0]).")
+        p("-we"  ,type=str           ,help="Weight the histogram. If argument is integer i take weights as: exp(-x[i]+x[0]). If integer and explicit + in front +i take weights as: exp(+x[i]-x[0]). If argument is string: weights = expr, see -expr for syntax.")
         p('-subf',action='store_true',help="Plot each file to separate sub plot")
         p('-subc',action='store_true',help="Plot each column to separate sub plot")
         p("-expr",type=str,nargs='+' ,help="Plot evaluated expression for columns. Data from n:th file and i:th row is expressed as 'f[n]_[i]', i:th row of piped in input is expressed as 'p[i]'. All numpy array functions should be usable. If '-x' is set assumes that the X-axis is the same between files and files have the same number of rows and uses the X-axis data from the first file. Example: -expr 'f0_1 - mean(f0_1) + f1_2*0.5' ")
@@ -246,7 +246,7 @@ class pplot:
         p("-axvl",type=int           ,help="plot vertical lines on multiples of given int")
         p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
         p("-mean",action='store_true',help="print means of the columns")
-#TODO        p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
+        p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p=None
@@ -392,10 +392,10 @@ class pplot:
                               edgecolor=[(*c,1)], facecolor=[(*c,0.5)],
                               weights=weights, density=self.args.norm)
 
-    def plot_expr(self,expr):
+    def eval_expr(self,expr):
         from sympy.utilities.lambdify import lambdify
         from sympy.parsing.sympy_parser import parse_expr
-
+        #
         f = parse_expr(expr)
         f_syms = list(f.free_symbols)
         arg_arr = []
@@ -415,15 +415,14 @@ class pplot:
                     arg_arr.append( dat )
                 except:
                     pass
-
         #idxs_x = [ int(str(f_syms[i])[1]) for i in range(0,len(f_syms)) ]
         np_f = lambdify(f_syms, f, modules=[expr_funcs_dict,'numpy'] )
         expr_data = np_f( *arg_arr )#*[data[:,i] for i in idxs]  )
-        #if self.args.x is not None:
+        return expr_data
+
+    def plot_expr(self,expr):
+        expr_data = self.eval_expr(expr)
         self.plot_one(0,0 ,expr_data=expr_data, label=expr)
-        #else:
-        #    self.plot_one(expr_data, label=expr)
-        #print(expr_data)
 
     def get_piped(self):
         if sys.stdin.isatty(): return
@@ -497,14 +496,26 @@ class pplot:
         err = None 
         if (self.args.e is not None): 
             err = self.data[file_i][:,self.args.e] if not piped_data else self.piped[:,self.args.e]
+        
         # weights
         weights = None
         if self.args.we is not None and self.args.hist: # dont bother if not hist plot
-            #print(f"computing we using: {self.args.we}")
-            weights = self.data[file_i][:,self.args.we] if not piped_data else self.piped[:,self.args.we]
-            w0 = weights[0]
-            weights = np.exp(-weights+w0)
-
+            weights = None
+            self.args.we = self.args.we.strip()
+            try:
+                weight_idx = int(self.args.we)
+                weights = self.data[file_i][:,weight_idx] if not piped_data else self.piped[:,weight_idx]
+                w0 = weights[0]
+                if self.args.we[0] == '+':
+                    print(f"Weights using data idx: weights = exp( + dat[{weight_idx}] )")
+                    weights = np.exp( +weights -w0)
+                else:
+                    print(f"Weights using data idx: weights = exp( - dat[{weight_idx}] )")
+                    weights = np.exp( -weights +w0)
+            except:
+                # assuming args.we is an string expr
+                print(f"Weights using expr: weights = {self.args.we} )")
+                weights = self.eval_expr(self.args.we)
 
         # calc means err etc...
         if self.args.mean:
