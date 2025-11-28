@@ -249,6 +249,7 @@ class pplot:
         p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
+        p("-print_labels",action="store_true",help="Print labels read from files header if present.")
         p=None
         if arg_str is not None:
             import shlex
@@ -667,12 +668,12 @@ class pplot:
             for expr in self.args.expr:
                 self.plot_expr(expr)
         
-        # TODO: make an option
         # print data labels for reference
-        for fi in range(0,len(self.data_labels)):
-            print(f"{self.fname_data[fi]}:")
-            for di in range(0,len(self.data_labels[fi])):
-                print(f"    {di}: {self.data_labels[fi][di]}")
+        if self.args.print_labels:
+            for fi in range(0,len(self.data_labels)):
+                print(f"{self.fname_data[fi]}:")
+                for di in range(0,len(self.data_labels[fi])):
+                    print(f"    {di}: {self.data_labels[fi][di]}")
 
 
 
