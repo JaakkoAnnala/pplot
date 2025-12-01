@@ -548,7 +548,7 @@ class pplot:
         fmt = self.plt_fmt if not self.args.ps else self.args.ps
         if err is not None: 
             if x is None: x = np.arange(0,len(y))
-            self.ax.errorbar(x, y, fmt=fmt,yerr=err,capsize=5)
+            self.ax.errorbar(x, y, fmt=fmt,yerr=err,capsize=5, label=label)
         else:
             if x is not None: self.ax.plot(x, y,fmt,label=label)
             else: self.ax.plot(y,fmt,label=label)
