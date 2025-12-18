@@ -63,6 +63,7 @@ def is_in_ranges(i, ranges):
     return False
 
 def txt_find_data(pp, fname):
+    if not pp.tag_data_start: return []
     starts = []
     ends   = []
     # just use grep for now.. should be faster than anything in python.
@@ -111,14 +112,16 @@ def txt_find_data(pp, fname):
 
 # default data reader
 def get_data_txt(pp, fname):
+    import pandas as pd
     labels = []
     if pp.tag_header or pp.args.head: labels = get_data_labels(pp,fname)
     ranges = txt_find_data(pp, fname)
     #print(ranges)
     if not ranges:
-        return ( genfromtxt(fname, skip_header=pp.skip_lines, invalid_raise=False, 
-                                   comments=pp.line_comment, delimiter=pp.data_separator) 
-                , labels )
+        dat = pd.read_csv(fname,header=None,sep=pp.data_separator,
+                                comment=pp.line_comment,skiprows=pp.skip_lines, index_col=False).values
+        #if not np.issubdtype(dat.dtype, np.number): raise ValueError('Resulting numpy array from `gen_data_txt` is not a numeric array, check data separator `-s`.') # Hmm annoying TODO
+        return ( dat, labels )
 
 
     # use wc for now
@@ -126,13 +129,13 @@ def get_data_txt(pp, fname):
     n_lines = int(n_lines.stdout.decode('utf-8').split(' ')[0])
     footer = 0 if ranges[0][1] == -1 else n_lines - ranges[0][1]
     
-    dat = genfromtxt(fname, skip_header=ranges[0][0], skip_footer=footer, invalid_raise=False,
-                            comments=pp.line_comment, delimiter=pp.data_separator)
+    dat = pd.read_csv(fname,header=None,skiprows=ranges[0][0], skipfooter=footer, sep=pp.data_separator,
+                                comment=pp.line_comment).values
     
     for i in range(1,len(ranges)):
         footer = 0 if ranges[i][1] == -1 else n_lines - ranges[i][1]
-        dat2 = genfromtxt(fname, skip_header=ranges[i][0], skip_footer=footer, invalid_raise=False,
-                                 comments=pp.line_comment, delimiter=pp.data_separator)
+        dat2 = pd.read_csv(fname,header=None,skiprows=ranges[i][0], skipfooter=footer, sep=pp.data_separator,
+                                comment=pp.line_comment).values
         dat = np.concatenate( (dat,dat2) )
     return ( dat , labels )
 
@@ -166,11 +169,11 @@ class pplot:
     plt_fmt        = '-'           # matplotlib plot format
     cmap           = cm.viridis    #
     # defaults for get_data_txt
-    tag_data_start = "#data_start" # if set to None should disable searching for the data and just read everything in the file
-    tag_data_end   = "#data_end"   # 
+    tag_data_start = None # "#data_start" # if set to None should disable searching for the data and just read everything in the file
+    tag_data_end   = None # "#data_end"   # 
     tag_header     = "#header"     # if set to None does not try to get header as a default, the option -head can still be used
     line_comment   = "#"           # line comment when reading data
-    data_separator = None          # None defaults to any number of white space
+    data_separator = '\\s+'        # defaults to any number of white space
     # Internals:
     parser = None
     args = None
@@ -250,6 +253,7 @@ class pplot:
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p("-print_labels",action="store_true",help="Print labels read from files header if present.")
+        p("-no_show",action="store_true",help="do not show() at the end of accumulating plots.")
         p=None
         if arg_str is not None:
             import shlex
@@ -301,7 +305,7 @@ class pplot:
 
         self.plot_all()
 
-        if arg_str is None:
+        if arg_str is None and not self.args.no_show:
             import matplotlib.pyplot as plt
             plt.legend()
             plt.show()

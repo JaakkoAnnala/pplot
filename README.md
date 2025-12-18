@@ -48,6 +48,7 @@ $pplot.py data.txt 1 -x0 -rf data_reader_example
 - numpy      (tested on v1.22.3)
 - sympy      (tested on v1.9)
 - matplotlib (tested on v3.5.1)
+- pandas     (tested on v2.3.1)
 
 ### Optional:
 #### GNU utils:
