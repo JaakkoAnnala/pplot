@@ -163,6 +163,14 @@ def get_data_labels(pp, fname):
         print(f"WARNING: did not find header tag `{tag_h}` in file: {fname}")
     return header
 
+def autocorr(x):
+    from scipy.signal import correlate
+    mean = x.mean()
+    v = x.var()
+    xp = x - mean
+    corr = correlate(xp, xp, mode='full', method="fft")/(v * x.size)
+    return corr[corr.size//2:]
+
 class pplot:
     # defaults
     _data_reader_f_=get_data_txt   # default data reader func
@@ -250,6 +258,7 @@ class pplot:
         p("-axhl",type=int           ,help="plot horizontal lines on multiples of given int")
         p("-mean",action='store_true',help="print means of the columns")
         p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
+        p("-autocorr" ,action='store_true',help="Plot autocorrelation: ")
         p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p("-print_labels",action="store_true",help="Print labels read from files header if present.")
@@ -521,6 +530,10 @@ class pplot:
                 # assuming args.we is an string expr
                 print(f"Weights using expr: weights = {self.args.we} )")
                 weights = self.eval_expr(self.args.we)
+
+        # calc auto correlation of y and store it back to y so it gets plotted
+        if self.args.autocorr:
+            y = autocorr(y)
 
         # calc means err etc...
         if self.args.mean:
