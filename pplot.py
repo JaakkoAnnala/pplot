@@ -544,7 +544,7 @@ class pplot:
                 print(f" err = {mcerr_res[1]} integrated_auto_corr = {mcerr_res[2]} ( +/- {mcerr_res[3]} )", end="")
             else:
                 print(" mcerr not found",end="")
-        print("")
+        if self.args.mean or self.args.err: print("")
 
         # plot histogram
         if self.args.hist:
