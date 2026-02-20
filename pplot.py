@@ -235,6 +235,7 @@ class pplot:
         p('-subf',action='store_true',help="Plot each file to separate sub plot")
         p('-subc',action='store_true',help="Plot each column to separate sub plot")
         p("-expr",type=str,nargs='+' ,help="Plot evaluated expression for columns. Data from n:th file and i:th row is expressed as 'f[n]_[i]', i:th row of piped in input is expressed as 'p[i]'. All numpy array functions should be usable. If '-x' is set assumes that the X-axis is the same between files and files have the same number of rows and uses the X-axis data from the first file. Example: -expr 'f0_1 - mean(f0_1) + f1_2*0.5' ")
+        p("-x_expr",type=str         ,help="Plot data against x-values transformed via the given expression, where the x-axis in the expression is referenced as 'x' . The '-x' has to be set. I.e. transform given x-axis to expr(x) ' ")
         p('-b'   ,type=int           ,help="Plot data binned in bins of the given size.")
         p('-be'  ,action='store_true',help="Show standard deviation/sqrt(bin_size) error bars for -b Plot.")
 #TODO        p('-i'   ,action='store_true',help="Return to interactive python shell.")
@@ -434,6 +435,21 @@ class pplot:
         expr_data = np_f( *arg_arr )#*[data[:,i] for i in idxs]  )
         return expr_data
 
+    def eval_x_expr(self,expr,x):
+        from sympy.utilities.lambdify import lambdify
+        from sympy.parsing.sympy_parser import parse_expr
+        #
+        f = parse_expr(expr)
+        f_syms = list(f.free_symbols)
+        if len(f_syms) != 1 or str(f_syms[0]) != 'x':
+                print("ERROR: the -x_expr should depend on 'x' and only 'x'. ")
+                print(f"     : it depends on {f_syms}")
+                exit(1)
+
+        np_f = lambdify(f_syms, f, modules=[expr_funcs_dict,'numpy'] )
+        expr_data = np_f( x )
+        return expr_data
+
     def plot_expr(self,expr):
         expr_data = self.eval_expr(expr)
         self.plot_one(0,0 ,expr_data=expr_data, label=expr)
@@ -498,6 +514,10 @@ class pplot:
         x = None 
         if (self.args.x is not None): 
             x = self.data[file_i][:,self.args.x] if not piped_data else self.piped[:,self.args.x]
+            # transform the x-axis data with given expression
+            if self.args.x_expr is not None:
+                x = self.eval_x_expr(self.args.x_expr,x)
+
         # y-axis
         y = None
         if expr_data is not None: y = expr_data
