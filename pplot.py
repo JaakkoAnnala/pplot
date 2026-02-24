@@ -220,7 +220,8 @@ class pplot:
         p('-s'   ,type=str           ,help='Separator   : Option for default data reader. Default is any number of whitespaces.')
         p('-head',type=str,nargs='?' ,const=self.tag_header
                                      ,help=f"Header      : Option for default data reader. If no argument given try to get header from first line that contains `{self.tag_header}`. If given input is convertible to integer read the header from that line. Otherwise find the line with the given string and use the preceding string to get the labels.")
-        p('-cr'  ,type=int,nargs='+' ,help="Column Range. Only read data from given range of columns from all datafiles. If only one int given assume range [0,int]")
+        p('-rr'  ,type=int,nargs='+' ,help="Row Range. Only plot data for given range of rows (from all datafiles). If only one int given assume range [0,int]. Passing <int> -1 results in a range from [int, end_of_data].")
+        p('-hs'  ,type=int           ,help="Header Skip. Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p('-logy',action='store_true',help="Log y axis.")
         p('-logx',action='store_true',help="Log x axis.")
         p('-lny' ,action='store_true',help="Base e Log y axis.")
@@ -260,7 +261,6 @@ class pplot:
         p("-mean",action='store_true',help="print means of the columns")
         p("-err" ,action='store_true',help="print error estimate for the column using integrated autocorrelation time tau: err=sqrt( 2 * tau * var/(N-1) )")
         p("-autocorr" ,action='store_true',help="Plot autocorrelation: ")
-        p("-skip_lines",type=int     ,help="Number of lines to skip from the beginnig of the file when parsing txt files.") #TODO: does not work when start and end tags
         p("-list_expr_funcs", action='store_true', help="Lists the user defined functions that can be used in the -expr expressions.")
         p("-print_labels",action="store_true",help="Print labels read from files header if present.")
         p("-no_show",action="store_true",help="do not show() at the end of accumulating plots.")
@@ -270,8 +270,8 @@ class pplot:
             self.args = self.parser.parse_args(shlex.split(arg_str))
         else: self.args = self.parser.parse_args()
         #print(f"args: {self.args}")
-        if self.args.skip_lines:
-            self.skip_lines = 0 if self.args.skip_lines < 0 else self.args.skip_lines
+        if self.args.hs:
+            self.skip_lines = 0 if self.args.hs < 0 else self.args.hs
 
         # set up the data reader func
         if self.args.rf:
@@ -348,10 +348,10 @@ class pplot:
             
             # do here Column Range:
             # not optimal, we still read all the data unnecesarily, but this is the simplest way
-            if self.args.cr is not None:
-                cr = self.args.cr
-                if len(cr)>=2: self.data.append(dh[0][cr[0]:cr[1]])
-                else: self.data.append(dh[0][0:cr[0]])
+            if self.args.rr is not None:
+                rr = self.args.rr
+                if len(rr)>=2: self.data.append(dh[0][rr[0]:rr[1]])
+                else: self.data.append(dh[0][0:rr[0]])
             else: self.data.append(dh[0])
             
             self.data_labels.append(dh[1])
@@ -457,11 +457,11 @@ class pplot:
     def get_piped(self):
         if sys.stdin.isatty(): return
         self.piped = genfromtxt(sys.stdin, dtype=np.double, comments=self.line_comment)
-        # -cr
-        if self.args.cr is not None:
-            cr = self.args.cr
-            if len(cr)>=2: self.piped = self.piped[cr[0]:cr[1]]
-            else: self.piped = self.piped[0:cr[0]]
+        # -rr
+        if self.args.rr is not None:
+            rr = self.args.rr
+            if len(rr)>=2: self.piped = self.piped[rr[0]:rr[1]]
+            else: self.piped = self.piped[0:rr[0]]
         print(f"piped in data shape: {self.piped.shape}")
         if self.args.p:
             self.piped_cols = self.args.p

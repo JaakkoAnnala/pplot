@@ -5,7 +5,7 @@ _completion_pplot()
     cur="${COMP_WORDS[COMP_CWORD]}"
 
     # pp -help | grep -Po '^\s+\-\S+'
-    opts=" -h -c -x -e -p -s -head -cr -logy -logx -lny -lnx -xlim -ylim -hist -norm -fold -we -subf -subc -expr -b -be -int -rf -surf -cmap -logc -sc -title -xlab -ylab -ps -ts -te -axvl -axhl -mean -err -skip_lines -list_expr_funcs"
+    opts=" -h -c -x -e -p -s -head -rr -hs -logy -logx -lny -lnx -xlim -ylim -hist -norm -fold -we -subf -subc -expr -x_expr -b -be -int -rf -surf -cmap -logc -sc -title -xlab -ylab -ps -ts -te -axvl -axhl -mean -err -autocorr -list_expr_funcs -print_labels -no_show"
 
     COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
     return 0
