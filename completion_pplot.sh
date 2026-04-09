@@ -11,4 +11,4 @@ _completion_pplot()
     return 0
 }
 
-complete -F _completion_pplot pp
+complete -F _completion_pplot -o default pp

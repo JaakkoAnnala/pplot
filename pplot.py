@@ -387,7 +387,7 @@ class pplot:
         if self.args.fold:
             self.last_plot=self.ax.hist(data[0]%1.0,label=label, bins=bins,
                               color=c, histtype='stepfilled',
-                              edgecolor=[(*c,1)], facecolor=[(*c,0.5)],
+                              edgecolor=[*c,1], facecolor=[*c,0.5],
                               weights=weights, density=self.args.norm)
             lp = self.last_plot
             if self.args.int:
@@ -404,7 +404,7 @@ class pplot:
         else:
             self.last_plot=self.ax.hist(data[0],label=label, bins=bins,
                               color=c, histtype='stepfilled',
-                              edgecolor=[(*c,1)], facecolor=[(*c,0.5)],
+                              edgecolor=[*c,1], facecolor=[*c,0.5],
                               weights=weights, density=self.args.norm)
 
     def eval_expr(self,expr):
@@ -450,9 +450,9 @@ class pplot:
         expr_data = np_f( x )
         return expr_data
 
-    def plot_expr(self,expr):
+    def plot_expr(self,expr): 
         expr_data = self.eval_expr(expr)
-        self.plot_one(0,0 ,expr_data=expr_data, label=expr)
+        self.plot_one(0,0 ,expr_data=expr_data, label=expr) # TODO: what to do with file_i, col_i
 
     def get_piped(self):
         if sys.stdin.isatty(): return
@@ -513,7 +513,7 @@ class pplot:
         # x-axis
         x = None 
         if (self.args.x is not None): 
-            x = self.data[file_i][:,self.args.x] if not piped_data else self.piped[:,self.args.x]
+            x = self.data[file_i][:,self.args.x] if (not piped_data) and (len(self.data)!=0) else self.piped[:,self.args.x]
             # transform the x-axis data with given expression
             if self.args.x_expr is not None:
                 x = self.eval_x_expr(self.args.x_expr,x)
