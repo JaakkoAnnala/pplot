@@ -322,6 +322,10 @@ class pplot:
 
 
     def read_all_data(self):
+        self.data = []
+        self.fname_data = []
+        self.data_cols = []
+        self.data_labels = []
         if not self.args.files: return
         # parse filenames and possible indices
         #  fname1.dat 1 2 3 fname2.dat 4 3 2 etc..
@@ -355,6 +359,25 @@ class pplot:
             else: self.data.append(dh[0])
             
             self.data_labels.append(dh[1])
+
+    def reload_data(self, event=None):
+        if event is not None and (event.key is None or event.key.lower() != "r"):
+            return
+        if not self.fname_data:
+            return
+
+        previous = (self.data, self.fname_data, self.data_cols, self.data_labels)
+        try:
+            self.read_all_data()
+        except Exception as exc:
+            self.data, self.fname_data, self.data_cols, self.data_labels = previous
+            print(f"ERROR: could not reload input data: {exc}", file=sys.stderr)
+            return
+
+        self.subplt_x = 0
+        self.subplt_y = 0
+        self.plot_all(clear=True)
+        self.fig.canvas.draw_idle()
 
 
     def get_label(self, file_i, col_i):
@@ -647,7 +670,7 @@ class pplot:
             nsub += len(c)
         return nsub + n_piped + n_expr
 
-    def plot_all(self):
+    def plot_all(self, clear=False):
         import matplotlib.pyplot as plt
 
         # set up sub plot stuff
@@ -656,18 +679,23 @@ class pplot:
         len_data = len(self.data)
         n_subs = self.calc_n_sub_plots()
         #print(f"n_sub_plots = {n_subs}")
+        if self.fig is None:
+            self.fig = plt.figure()
+        elif clear:
+            self.fig.clear()
+
         if self.args.subf or self.args.subc:
             if n_subs < 3:
-                self.fig, self.axs = plt.subplots(2,1, subplot_kw=sp_kw)
+                self.axs = self.fig.subplots(2, 1, subplot_kw=sp_kw)
                 self.n_subx=2
                 self.n_suby=1
             else:
                 n = int(np.ceil(np.sqrt(n_subs)))
-                self.fig, self.axs = plt.subplots(n,n, subplot_kw=sp_kw)
+                self.axs = self.fig.subplots(n, n, subplot_kw=sp_kw)
                 self.n_subx=n
                 self.n_suby=n
         else:
-            self.fig, self.axs = plt.subplots(1,1, subplot_kw=sp_kw)
+            self.axs = self.fig.subplots(1, 1, subplot_kw=sp_kw)
             self.ax = self.axs
 
         # set figure subtitle
@@ -712,8 +740,9 @@ class pplot:
                 for di in range(0,len(self.data_labels[fi])):
                     print(f"    {di}: {self.data_labels[fi][di]}")
 
-
-
+        if not getattr(self, "_reload_key_connected", False):
+            self.fig.canvas.mpl_connect("key_press_event", self.reload_data)
+            self._reload_key_connected = True
 
 if __name__ == "__main__":
     pp = pplot()
